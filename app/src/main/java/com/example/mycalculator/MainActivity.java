@@ -13,20 +13,16 @@ import java.text.NumberFormat;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final String TAG = MainActivity.class.getSimpleName();
     Button btnZero, btnOne, btnTwo, btnThree, btnFour, btnFive, btnSix, btnSeven, btnEight, btnNine, btnPercent, btnPlus, btnMinus, btnMultiply,
     btnDivision, btnPoint, btnEqual, btnBackspace, btnAllCancel, btnBracket;
     TextView tvInput, tvOutput;
     String expression;
     Boolean checkBracket = false;
-    private boolean isOpPressed = false;
-    private double firstNumber = 0;
-    private double secondNumber = 0;
-    private char currentOp;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
 
         btnAllCancel = findViewById(R.id.btnAllCancel);
         btnBackspace = findViewById(R.id.btnBackspace);
@@ -63,9 +59,6 @@ public class MainActivity extends AppCompatActivity {
                 if (expression.length() > 0) {
                     expression = expression.substring(0, expression.length()-1);
                     tvInput.setText(expression);
-                }
-                else if (expression.length() < 0){
-                    tvInput.setText("");
                 }
             }
         });
@@ -164,8 +157,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
-//                expression = tvInput.getText().toString();
-
                 tvInput.append("+");
             }
         });
@@ -180,14 +171,14 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
-                tvInput.append("*");
+                tvInput.append("×");
             }
         });
         btnDivision.setOnClickListener(new View.OnClickListener(){
 
             @Override
             public void onClick(View v) {
-                tvInput.append("/");
+                tvInput.append("÷");
             }
         });
         btnBracket.setOnClickListener(new View.OnClickListener(){
@@ -209,73 +200,90 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 expression = tvInput.getText().toString();
-                float result = 56;
                 if (expression.length() > 0){
-//                    tvOutput.setText(String.valueOf(result));
                     Controller(expression);
-                }
-                else if (expression.length() < 0){
-                    tvOutput.setText("");
                 }
             }
         });
     }
 
     private void Controller(String expression) {
-        if (expression.contains("(")) {
-            Bracket(expression);
-        } else if(!expression.contains("+") && !expression.contains("-") && !expression.contains("/") && !expression.contains("*")){
+        if (expression.contains("(") && expression.indexOf("(") == 0 && expression.indexOf(")") == expression.length()-1) {
+            expression = expression.substring(1, expression.length()-1);
+        }
+        if(IsNumber(expression)){
             tvOutput.setText(expression);
+        } else if (expression.contains("(")) {
+            Bracket(expression);
         } else Controller(expression, "EMPTY");
     }
 
     private void Controller(String process, String small_expression) {
-        System.out.println(process);
-        System.out.println(small_expression);
          if (small_expression.equals("EMPTY")) {
             Controller(process, process);
-        } else if (small_expression.contains("*")) {
+        } else if (small_expression.contains("×")) {
             Multiply(process, small_expression);
-        } else if (small_expression.contains("/")) {
+        } else if (small_expression.contains("÷")) {
             Division(process, small_expression);
+        } else if (small_expression.contains("%")) {
+             Percent(process, small_expression);
         } else {
             PlusAndMinus(process, small_expression);
         }
     }
 
+    private void Percent(String process, String small_expression) {
+        NumberFormat number_format = new DecimalFormat("##.#####");
+        int index = small_expression.indexOf("%");
+        float before_number = BeforeNumber(index, small_expression);
+        float percent_result = before_number/100;
+        String percent_text = number_format.format(before_number) + "%";
+        System.out.println(percent_result);
+        small_expression = small_expression.replace(percent_text, number_format.format(percent_result));
+        if (process.contains("TEMPORARY")) {
+            process = process.replace("TEMPORARY", small_expression);
+        } else process = small_expression;
+        Controller(process);
+    }
+
     private void PlusAndMinus(String process, String small_expression) {
         NumberFormat numberFormat = new DecimalFormat("###.#");
-        System.out.println(process);
-        System.out.println(small_expression);
+        small_expression = "0" + small_expression;
         String temp_smail_expression = small_expression;
         if (temp_smail_expression.contains("+")) {
             temp_smail_expression = temp_smail_expression.replaceAll("[+]", ",+");
-        } else if (temp_smail_expression.contains("-")) {
+        }
+        if (temp_smail_expression.contains("-")) {
             temp_smail_expression = temp_smail_expression.replaceAll("-", ",-");
         }
         String[] operand = temp_smail_expression.split(",");
-        Float result = Float.valueOf(0);
+        float result;
+        result = (float) 0;
         for (String item:operand) {
             result = result + Float.parseFloat(item);
         }
         small_expression = numberFormat.format(result);
-        process = process.replace(process, small_expression);
+        if (process.contains("(TEMPORARY)")) {
+            process = process.replace("(TEMPORARY)", small_expression);
+        } else process = small_expression;
+
         System.out.println("r "+result);
         System.out.println("p "+process);
         System.out.println("s "+small_expression);
         Controller(process);
     }
 
-    private String ReplaceTemporaryVariable(String process, String small_expression) {
-         if (process.contains("(TEMPORARY")) {
-             process = process.replace("TEMPORARY", small_expression);
-         } else process = small_expression;
-        return process;
-    }
 
     private boolean IsNumber(String small_expression) {
-        if (!small_expression.contains("+") && !small_expression.contains("*") && !small_expression.contains("/")){
-            return true;
+        int count_minus_operator = 0;
+        String[] character_array = small_expression.split("");
+        for (String item:character_array) {
+            if (item.equals("-")) {
+                count_minus_operator = count_minus_operator+1;
+            }
+        }
+        if (!small_expression.contains("+") && !small_expression.contains("×") && !small_expression.contains("÷") && !small_expression.contains("%")){
+            return !small_expression.contains("-") || small_expression.contains("-") && small_expression.indexOf("-") == 0 && count_minus_operator == 1;
         } else return false;
     }
 
@@ -291,39 +299,52 @@ public class MainActivity extends AppCompatActivity {
 
     private void Multiply(String process, String small_expression) {
         NumberFormat numberFormat = new DecimalFormat("###.#");
-        int index = small_expression.indexOf("*");
+        int index = small_expression.indexOf("×");
         float before_number = BeforeNumber(index, small_expression);
         float after_number = AfterNumber(index, small_expression);
         float multiply_result = before_number*after_number;
-        String multiply_text = numberFormat.format(before_number) + "*" + numberFormat.format(after_number);
+        String multiply_text = numberFormat.format(before_number) + "×" + numberFormat.format(after_number);
         small_expression = small_expression.replace(multiply_text, numberFormat.format(multiply_result));
-        process = ReplaceTemporaryVariable(process, small_expression);
+        if (process.contains("TEMPORARY")) {
+            process = process.replace("TEMPORARY", small_expression);
+        } else process = small_expression;
         Controller(process);
     }
 
     private float AfterNumber(int index, String small_expression) {
         int n = index+1;
-        String text_number = "";
+        StringBuilder text_number = new StringBuilder();
         while(n > index && n < small_expression.length() && small_expression.codePointAt(n) > 47 && small_expression.codePointAt(n) < 58) {
-            text_number = text_number + small_expression.charAt(n);
+            text_number.append(small_expression.charAt(n));
             n++;
         }
-        return Float.parseFloat(text_number);
+        return Float.parseFloat(text_number.toString());
     }
 
     private float BeforeNumber(int index, String small_expression) {
         int n = index-1;
-        String text_number = "";
+        StringBuilder text_number = new StringBuilder();
         while(n >= 0 && small_expression.codePointAt(n) > 47 && small_expression.codePointAt(n) < 58) {
-            text_number = text_number + small_expression.charAt(n);
+            text_number.append(small_expression.charAt(n));
             n--;
         }
-        StringBuilder reverse = new StringBuilder(text_number);
+        StringBuilder reverse = new StringBuilder(text_number.toString());
         return Float.parseFloat(reverse.reverse().toString());
     }
 
     private void Division(String process, String small_expression) {
-        System.out.println(small_expression);
+        NumberFormat numberFormat = new DecimalFormat("#######.#####");
+        int index = small_expression.indexOf("÷");
+        float before_number = BeforeNumber(index, small_expression);
+        float after_number = AfterNumber(index, small_expression);
+        float division_result = before_number/after_number;
+        String division_text = numberFormat.format(before_number) + "÷" + numberFormat.format(after_number);
+        small_expression = small_expression.replace(division_text, numberFormat.format(division_result));
+        if (process.contains("TEMPORARY")) {
+            process = process.replace("TEMPORARY", small_expression);
+        } else process = small_expression;
+        Controller(process);
     }
+
 }
 
