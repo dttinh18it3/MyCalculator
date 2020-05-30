@@ -15,7 +15,8 @@ public class MainActivity extends AppCompatActivity {
 
     Button btnZero, btnOne, btnTwo, btnThree, btnFour, btnFive, btnSix, btnSeven, btnEight, btnNine, btnPercent, btnPlus, btnMinus, btnMultiply,
     btnDivision, btnPoint, btnEqual, btnBackspace, btnAllCancel, btnBracket;
-    TextView tvInput, tvOutput;
+    TextView tvInput;
+    TextView tvOutput;
     String expression;
     Boolean checkBracket = false;
     @Override
@@ -50,7 +51,9 @@ public class MainActivity extends AppCompatActivity {
         btnNine = findViewById(R.id.btnNine);
 
         tvInput = findViewById(R.id.tvInput);
+        tvInput.setText("");
         tvOutput = findViewById(R.id.tvOutput);
+        tvOutput.setText("");
 
         btnBackspace.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -153,10 +156,16 @@ public class MainActivity extends AppCompatActivity {
                 tvInput.append("%");
             }
         });
+        System.out.println("input: " + tvInput.getText().toString());
+        System.out.println("Output: " + tvOutput.getText().toString());
         btnPlus.setOnClickListener(new View.OnClickListener(){
 
             @Override
             public void onClick(View v) {
+                if (!tvOutput.getText().toString().equals("")) {
+                    tvInput.setText(tvOutput.getText().toString());
+                    tvOutput.setText("");
+                }
                 tvInput.append("+");
             }
         });
@@ -164,6 +173,10 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
+                if (!tvOutput.getText().toString().equals("")) {
+                    tvInput.setText(tvOutput.getText().toString());
+                    tvOutput.setText("");
+                }
                 tvInput.append("-");
             }
         });
@@ -171,6 +184,10 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
+                if (!tvOutput.getText().toString().equals("")) {
+                    tvInput.setText(tvOutput.getText().toString());
+                    tvOutput.setText("");
+                }
                 tvInput.append("×");
             }
         });
@@ -178,6 +195,10 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
+                if (!tvOutput.getText().toString().equals("")) {
+                    tvInput.setText(tvOutput.getText().toString());
+                    tvOutput.setText("");
+                }
                 tvInput.append("÷");
             }
         });
